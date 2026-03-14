@@ -32,6 +32,9 @@ python -m src.ingest_catalog --days 7 --min-magnitude 6.0
 
 # Phase 6: evaluate lightweight classifier using cached historical data
 python -m src.ml_evaluate --db-path data/events.sqlite
+
+# Write explicit metrics artifact for Streamlit Phase 6 panel
+python -m src.ml_evaluate --db-path data/events.sqlite --output-json artifacts/metrics_latest.json
 ```
 
 4. Run the Streamlit app:

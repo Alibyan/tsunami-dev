@@ -1,6 +1,8 @@
 """Streamlit app: ranked scored events from local SQLite cache."""
 
 from datetime import datetime, timezone
+import json
+import os
 from statistics import fmean
 
 import streamlit as st
@@ -37,6 +39,7 @@ def _score_records(records: list[dict]) -> list[dict]:
 st.set_page_config(page_title="Offshore Quake Triage", layout="wide")
 
 TSUNAMI_GOV_URL = "https://www.tsunami.gov/"
+METRICS_ARTIFACT_PATH = "artifacts/metrics_latest.json"
 
 
 def _nws_alert_definitions_markdown() -> str:
@@ -57,6 +60,16 @@ def _score_color(score: float) -> list[int]:
     if score >= 45:
         return [255, 193, 7]  # amber
     return [40, 167, 69]  # green
+
+
+def _load_metrics_artifact(path: str = METRICS_ARTIFACT_PATH) -> dict | None:
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return None
 
 
 def main() -> None:
@@ -122,6 +135,33 @@ def main() -> None:
             st.markdown(
                 f"**Official alerts live here:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
             )
+
+        with st.expander("Model Evaluation (Phase 6)", expanded=False):
+            metrics = _load_metrics_artifact()
+            if not metrics:
+                st.info(
+                    "No metrics artifact found yet. Run: "
+                    "`python -m src.ml_evaluate --db-path data/events.sqlite`"
+                )
+            else:
+                st.write(
+                    {
+                        "target_label": metrics.get("target_label"),
+                        "split_mode_used": metrics.get("split_mode_used"),
+                        "rows_total": metrics.get("rows_total"),
+                        "train_rows": metrics.get("train_rows"),
+                        "test_rows": metrics.get("test_rows"),
+                        "pr_auc": metrics.get("pr_auc"),
+                        "positive_rate_test": metrics.get("positive_rate_test"),
+                        "note": metrics.get("note"),
+                    }
+                )
+                p_at_k = metrics.get("precision_at_k") or {}
+                if p_at_k:
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("Precision@5", p_at_k.get("k5"))
+                    c2.metric("Precision@10", p_at_k.get("k10"))
+                    c3.metric("Precision@20", p_at_k.get("k20"))
 
     records = fetch_recent_events(path=db_path, limit=max_rows)
     scored = [r for r in _score_records(records) if r["score"] >= min_score]
@@ -220,7 +260,9 @@ def main() -> None:
             "html": "<b>ID:</b> {id}<br/><b>Score:</b> {score}",
             "style": {"backgroundColor": "#111", "color": "#fff"},
         }
-        st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip))
+        st.pydeck_chart(
+            pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip)
+        )
 
 
 if __name__ == "__main__":

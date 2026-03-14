@@ -1,0 +1,15 @@
+{
+  "rows_total": 168,
+  "train_rows": 134,
+  "test_rows": 34,
+  "target_label": "tsunami",
+  "split_mode_used": "stratified_fallback",
+  "pr_auc": 0.5833,
+  "precision_at_k": {
+    "k5": 0.4,
+    "k10": 0.2,
+    "k20": 0.15
+  },
+  "positive_rate_test": 0.0882,
+  "note": null
+}

@@ -8,9 +8,11 @@ This keeps evaluation independent from our internal score formula.
 
 import argparse
 import json
+import os
 import sqlite3
 from dataclasses import dataclass
 from typing import Any
+
 
 @dataclass
 class EvalResult:
@@ -18,10 +20,34 @@ class EvalResult:
     train_rows: int
     test_rows: int
     target_label: str
+    split_mode_used: str | None
     pr_auc: float | None
     precision_at_k: dict[str, float]
     positive_rate_test: float | None
     note: str | None = None
+
+
+def _result_to_dict(result: EvalResult) -> dict[str, Any]:
+    return {
+        "rows_total": result.rows_total,
+        "train_rows": result.train_rows,
+        "test_rows": result.test_rows,
+        "target_label": result.target_label,
+        "split_mode_used": result.split_mode_used,
+        "pr_auc": result.pr_auc,
+        "precision_at_k": result.precision_at_k,
+        "positive_rate_test": result.positive_rate_test,
+        "note": result.note,
+    }
+
+
+def write_metrics_artifact(result: EvalResult, output_path: str) -> str:
+    directory = os.path.dirname(output_path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as fh:
+        json.dump(_result_to_dict(result), fh, indent=2)
+    return output_path
 
 
 def _precision_at_k(y_true: list[int], y_prob: list[float], k: int) -> float:
@@ -50,7 +76,9 @@ def load_rows(db_path: str) -> list[dict[str, Any]]:
     return rows
 
 
-def _feature_and_label(rows: list[dict[str, Any]]) -> tuple[list[list[float]], list[int]]:
+def _feature_and_label(
+    rows: list[dict[str, Any]],
+) -> tuple[list[list[float]], list[int]]:
     X, y = [], []
     for r in rows:
         # Use last-known timestamp as age proxy feature.
@@ -88,6 +116,7 @@ def evaluate_model(
             train_rows=0,
             test_rows=0,
             target_label="tsunami",
+            split_mode_used=None,
             pr_auc=None,
             precision_at_k={},
             positive_rate_test=None,
@@ -101,6 +130,36 @@ def evaluate_model(
 
     X_train, X_test = X[:split_idx], X[split_idx:]
     y_train, y_test = y[:split_idx], y[split_idx:]
+    split_mode_used = "time"
+
+    # Default to time split, then fallback if class diversity is insufficient.
+    if len(set(y_train)) < 2 or len(set(y_test)) < 2:
+        try:
+            from sklearn.model_selection import train_test_split
+
+            X_train, X_test, y_train, y_test = train_test_split(
+                X,
+                y,
+                test_size=(1.0 - train_ratio),
+                random_state=42,
+                stratify=y,
+            )
+            split_mode_used = "stratified_fallback"
+        except Exception:
+            return EvalResult(
+                rows_total=len(rows),
+                train_rows=len(y_train),
+                test_rows=len(y_test),
+                target_label="tsunami",
+                split_mode_used="time",
+                pr_auc=None,
+                precision_at_k={},
+                positive_rate_test=(sum(y_test) / len(y_test)) if y_test else None,
+                note=(
+                    "Insufficient class diversity for LogisticRegression in time "
+                    "split, and stratified fallback could not be created."
+                ),
+            )
 
     if len(set(y_train)) < 2 or len(set(y_test)) < 2:
         return EvalResult(
@@ -108,10 +167,11 @@ def evaluate_model(
             train_rows=len(y_train),
             test_rows=len(y_test),
             target_label="tsunami",
+            split_mode_used=split_mode_used,
             pr_auc=None,
             precision_at_k={},
             positive_rate_test=(sum(y_test) / len(y_test)) if y_test else None,
-            note="Insufficient class diversity for LogisticRegression in time split.",
+            note="Insufficient class diversity after split selection.",
         )
 
     # Deferred import keeps non-ML test paths lightweight.
@@ -139,6 +199,7 @@ def evaluate_model(
         train_rows=len(y_train),
         test_rows=len(y_test),
         target_label="tsunami",
+        split_mode_used=split_mode_used,
         pr_auc=round(pr_auc, 4),
         precision_at_k={
             "k5": round(p_at_5, 4),
@@ -161,6 +222,11 @@ def _build_parser() -> argparse.ArgumentParser:
         default=0.8,
         help="Time-based train split ratio",
     )
+    parser.add_argument(
+        "--output-json",
+        default="artifacts/metrics_latest.json",
+        help="Path to write evaluation JSON artifact",
+    )
     return parser
 
 
@@ -170,4 +236,6 @@ if __name__ == "__main__":
         db_path=args.db_path,
         train_ratio=args.train_ratio,
     )
-    print(json.dumps(result.__dict__, indent=2))
+    output_path = write_metrics_artifact(result, args.output_json)
+    print(json.dumps(_result_to_dict(result), indent=2))
+    print(f"Wrote metrics artifact to {output_path}")
