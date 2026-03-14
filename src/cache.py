@@ -2,7 +2,7 @@
 
 import os
 import sqlite3
-from typing import Optional
+from typing import Any
 
 
 def create_db(path: str = "data/events.sqlite") -> str:
@@ -55,3 +55,25 @@ def insert_raw_event(
         },
     )
     conn.commit()
+
+
+def fetch_recent_events(path: str = "data/events.sqlite", limit: int = 200) -> list[dict[str, Any]]:
+    """Return latest cached events for UI and scoring flows."""
+    if not os.path.exists(path):
+        return []
+
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, time, updated, mag, depth, lat, lon, place, urls, tsunami
+        FROM events
+        ORDER BY time DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
