@@ -57,7 +57,9 @@ def insert_raw_event(
     conn.commit()
 
 
-def fetch_recent_events(path: str = "data/events.sqlite", limit: int = 200) -> list[dict[str, Any]]:
+def fetch_recent_events(
+    path: str = "data/events.sqlite", limit: int = 200
+) -> list[dict[str, Any]]:
     """Return latest cached events for UI and scoring flows."""
     if not os.path.exists(path):
         return []

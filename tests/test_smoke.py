@@ -55,7 +55,7 @@ def test_pipeline_smoke():
 
         # test scoring function on the first normalized record
         first_evt = normalize_feature(features[0])
-        res = baseline_score(first_evt.dict())
-        assert "score" in res and "factors" in res
+        res = baseline_score(first_evt.model_dump())
+        assert "score" in res and "factors" in res and "explanation" in res
 
         conn.close()

@@ -18,7 +18,20 @@ pip install -r requirements.txt
 python -m src.ingest_usgs
 ```
 
-3. Run the Streamlit scaffold app:
+3. Run ingest pipeline with reliability modes:
+
+```bash
+# Live fetch with automatic fallback to local sample on failure
+python -m src.run_ingest_pipeline
+
+# Forced replay mode (no network needed)
+python -m src.run_ingest_pipeline --replay
+
+# Historical backfill (last 7 days, M6.0+ from USGS catalog API)
+python -m src.ingest_catalog --days 7 --min-magnitude 6.0
+```
+
+4. Run the Streamlit app:
 
 ```bash
 streamlit run src/app.py
