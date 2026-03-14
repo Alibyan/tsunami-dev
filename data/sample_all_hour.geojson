@@ -1,22 +1,32 @@
 {
-  "type": "FeatureCollection",
-  "metadata": {"generated": 0, "url": "https://example.local/sample"},
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "mag": 4.5,
-        "place": "10km S of Exampleville",
-        "time": 1600000000000,
-        "updated": 1600000001000,
-        "tz": null,
-        "url": "https://example.local/event/1",
-        "detail": "https://example.local/detail/1",
-        "tsunami": 0
-      },
-      "geometry": {"type": "Point", "coordinates": [-122.0, 37.0, 10.0]},
-      "id": "example1"
-    }
-  ],
-  "bbox": []
+    "type": "FeatureCollection",
+    "metadata": {
+        "generated": 0,
+        "url": "https://example.local/sample"
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "mag": 4.5,
+                "place": "10km S of Exampleville",
+                "time": 1600000000000,
+                "updated": 1600000001000,
+                "tz": null,
+                "url": "https://example.local/event/1",
+                "detail": "https://example.local/detail/1",
+                "tsunami": 0
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -122.0,
+                    37.0,
+                    10.0
+                ]
+            },
+            "id": "example1"
+        }
+    ],
+    "bbox": []
 }

@@ -1,4 +1,5 @@
 """Baseline scoring utilities (explainable triage)."""
+
 from datetime import datetime, timezone
 
 
@@ -15,10 +16,21 @@ def baseline_score(record: dict) -> dict:
 
     # Simple linear combination tuned for explainability
     score = mag * 2.0 + max(0.0, (100.0 - depth) / 100.0) - recency_hours * 0.1
-    return {"score": round(score, 3), "factors": {"mag": mag, "depth": depth, "recency_hours": round(recency_hours, 2)}}
+    return {
+        "score": round(score, 3),
+        "factors": {
+            "mag": mag,
+            "depth": depth,
+            "recency_hours": round(recency_hours, 2),
+        },
+    }
 
 
 if __name__ == "__main__":
     # quick self-check
-    sample = {"mag": 5.2, "depth": 10.0, "time": int(datetime.now(timezone.utc).timestamp() * 1000)}
+    sample = {
+        "mag": 5.2,
+        "depth": 10.0,
+        "time": int(datetime.now(timezone.utc).timestamp() * 1000),
+    }
     print(baseline_score(sample))

@@ -1,4 +1,5 @@
 """SQLite cache helpers for Phase 00."""
+
 import os
 import sqlite3
 from typing import Optional
@@ -30,7 +31,9 @@ def create_db(path: str = "data/events.sqlite") -> str:
     return path
 
 
-def insert_raw_event(conn: sqlite3.Connection, evt_id: str, raw_json: str, **fields) -> None:
+def insert_raw_event(
+    conn: sqlite3.Connection, evt_id: str, raw_json: str, **fields
+) -> None:
     cur = conn.cursor()
     cur.execute(
         """
