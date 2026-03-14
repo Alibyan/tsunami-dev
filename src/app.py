@@ -1,8 +1,10 @@
 """Streamlit app: ranked scored events from local SQLite cache."""
 
 from datetime import datetime, timezone
+from statistics import fmean
 
 import streamlit as st
+import pydeck as pdk
 
 from src.cache import create_db, fetch_recent_events
 from src.run_ingest_pipeline import run as run_ingest
@@ -46,6 +48,15 @@ def _nws_alert_definitions_markdown() -> str:
             "**Information Statement**: No major threat expected, issued for situational awareness.",
         ]
     )
+
+
+def _score_color(score: float) -> list[int]:
+    """Map score bands to RGB colors for visual triage at a glance."""
+    if score >= 75:
+        return [220, 53, 69]  # red
+    if score >= 45:
+        return [255, 193, 7]  # amber
+    return [40, 167, 69]  # green
 
 
 def main() -> None:
@@ -174,13 +185,42 @@ def main() -> None:
             )
 
     map_points = [
-        {"lat": r.get("lat"), "lon": r.get("lon")}
+        {
+            "lat": r.get("lat"),
+            "lon": r.get("lon"),
+            "score": r.get("score"),
+            "color": _score_color(float(r.get("score", 0.0))),
+            "radius": 12000 + int(float(r.get("score", 0.0)) * 180),
+            "id": r.get("id"),
+        }
         for r in scored
         if r.get("lat") is not None and r.get("lon") is not None
     ]
     if map_points:
-        st.subheader("Map")
-        st.map(map_points)
+        st.subheader("Map (Color-Coded by Score)")
+        st.caption(
+            "Red: high priority (>=75), Amber: medium (45-74.99), Green: lower (<45)."
+        )
+        view_state = pdk.ViewState(
+            latitude=fmean([p["lat"] for p in map_points]),
+            longitude=fmean([p["lon"] for p in map_points]),
+            zoom=2.5,
+            pitch=25,
+        )
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=map_points,
+            get_position="[lon, lat]",
+            get_fill_color="color",
+            get_radius="radius",
+            pickable=True,
+            auto_highlight=True,
+        )
+        tooltip = {
+            "html": "<b>ID:</b> {id}<br/><b>Score:</b> {score}",
+            "style": {"backgroundColor": "#111", "color": "#fff"},
+        }
+        st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip))
 
 
 if __name__ == "__main__":

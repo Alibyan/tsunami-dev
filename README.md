@@ -29,6 +29,9 @@ python -m src.run_ingest_pipeline --replay
 
 # Historical backfill (last 7 days, M6.0+ from USGS catalog API)
 python -m src.ingest_catalog --days 7 --min-magnitude 6.0
+
+# Phase 6: evaluate lightweight classifier using cached historical data
+python -m src.ml_evaluate --db-path data/events.sqlite
 ```
 
 4. Run the Streamlit app:

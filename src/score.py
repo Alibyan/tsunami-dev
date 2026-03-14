@@ -48,7 +48,9 @@ def _priority_label(total_score: float) -> str:
     return "Lower"
 
 
-def _explanation_text(mag: float, depth: float | None, age_hours: float, total_score: float) -> str:
+def _explanation_text(
+    mag: float, depth: float | None, age_hours: float, total_score: float
+) -> str:
     level = _priority_label(total_score)
 
     if mag >= 7.0:

@@ -2,3 +2,4 @@ requests
 pydantic
 streamlit
 pytest
+scikit-learn

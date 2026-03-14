@@ -101,12 +101,16 @@ def test_score_magnitude_weight_rises_above_m6():
     s59 = baseline_score({**base, "mag": 5.9})
     s65 = baseline_score({**base, "mag": 6.5})
     assert s65["factors"]["magnitude_factor"] > s59["factors"]["magnitude_factor"]
-    assert s65["factors"]["magnitude_factor"] - s59["factors"]["magnitude_factor"] >= 4.0
+    assert (
+        s65["factors"]["magnitude_factor"] - s59["factors"]["magnitude_factor"] >= 4.0
+    )
 
 
 def test_score_factor_caps():
     # Extreme event should still respect 50/30/20 caps and total <= 100.
-    res = baseline_score({"mag": 9.9, "depth": 0.0, "time": 9999999999999, "updated": 9999999999999})
+    res = baseline_score(
+        {"mag": 9.9, "depth": 0.0, "time": 9999999999999, "updated": 9999999999999}
+    )
     assert res["factors"]["magnitude_factor"] <= 50.0
     assert res["factors"]["depth_factor"] <= 30.0
     assert res["factors"]["recency_factor"] <= 20.0
