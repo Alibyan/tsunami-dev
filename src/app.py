@@ -9,6 +9,7 @@ import streamlit as st
 import pydeck as pdk
 
 from src.cache import create_db, fetch_recent_events
+from src.enrich_marine import fetch_marine_conditions
 from src.run_ingest_pipeline import run as run_ingest
 from src.score import baseline_score
 
@@ -136,6 +137,13 @@ def main() -> None:
                 f"**Official alerts live here:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
             )
 
+        st.divider()
+        marine_enrichment = st.toggle(
+            "Show marine wave context (optional)",
+            value=False,
+            help="Fetches live wave height/period from Open-Meteo for the selected event. Fails silently if unavailable.",
+        )
+
         with st.expander("Model Evaluation (Phase 6)", expanded=False):
             metrics = _load_metrics_artifact()
             if not metrics:
@@ -171,59 +179,7 @@ def main() -> None:
         st.code("python -m src.run_ingest_pipeline --replay")
         st.stop()
 
-    left, right = st.columns([2, 1])
-    with left:
-        st.subheader("Ranked Queue")
-        rows = [
-            {
-                "id": r["id"],
-                "score": r["score"],
-                "explanation": r.get("explanation"),
-                "mag": r.get("mag"),
-                "depth": r.get("depth"),
-                "tsunami": r.get("tsunami"),
-                "time": r.get("time_iso"),
-                "place": r.get("place"),
-            }
-            for r in scored
-        ]
-        st.dataframe(rows, width="stretch", hide_index=True)
-
-    with right:
-        st.subheader("Summary")
-        st.metric("Events shown", len(scored))
-        st.metric("Top score", scored[0]["score"])
-
-    st.subheader("Event Detail")
-    selected_id = st.selectbox("Select event", options=[r["id"] for r in scored])
-    selected = next(r for r in scored if r["id"] == selected_id)
-
-    st.write(
-        {
-            "id": selected["id"],
-            "place": selected.get("place"),
-            "score": selected["score"],
-            "explanation": selected.get("explanation"),
-            "time": selected.get("time_iso"),
-            "factors": selected["factors"],
-        }
-    )
-    st.markdown(
-        f"### Official alerts live here: [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
-    )
-
-    st.subheader("Top Event Cards")
-    for event in scored[:5]:
-        with st.container(border=True):
-            st.markdown(
-                f"**{event.get('id', 'unknown')}** | score: **{event.get('score')}**"
-            )
-            st.markdown(event.get("place") or "Unknown location")
-            st.markdown(event.get("explanation") or "No explanation available.")
-            st.markdown(
-                f"**Official alerts live here:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
-            )
-
+    # --- Map: global picture first ---
     map_points = [
         {
             "lat": r.get("lat"),
@@ -232,14 +188,16 @@ def main() -> None:
             "color": _score_color(float(r.get("score", 0.0))),
             "radius": 12000 + int(float(r.get("score", 0.0)) * 180),
             "id": r.get("id"),
+            "place": r.get("place", ""),
         }
         for r in scored
         if r.get("lat") is not None and r.get("lon") is not None
     ]
     if map_points:
-        st.subheader("Map (Color-Coded by Score)")
+        st.subheader("Global Event Map")
         st.caption(
-            "Red: high priority (>=75), Amber: medium (45-74.99), Green: lower (<45)."
+            "Red \u2265 75 (high priority) \u00b7 Amber 45\u201374 (medium) \u00b7 Green < 45 (lower). "
+            "Hover for event ID and score."
         )
         view_state = pdk.ViewState(
             latitude=fmean([p["lat"] for p in map_points]),
@@ -257,11 +215,60 @@ def main() -> None:
             auto_highlight=True,
         )
         tooltip = {
-            "html": "<b>ID:</b> {id}<br/><b>Score:</b> {score}",
+            "html": "<b>{place}</b><br/>Score: <b>{score}</b><br/><small>{id}</small>",
             "style": {"backgroundColor": "#111", "color": "#fff"},
         }
         st.pydeck_chart(
             pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip)
+        )
+
+    st.divider()
+
+    # --- Ranked queue (left) + event detail (right) ---
+    left, right = st.columns([3, 2])
+    with left:
+        st.subheader("Ranked Queue")
+        st.caption(f"{len(scored)} events · sorted by triage score (highest first)")
+        rows = [
+            {
+                "score": r["score"],
+                "place": r.get("place"),
+                "mag": r.get("mag"),
+                "depth": r.get("depth"),
+                "tsunami \u26a0": r.get("tsunami"),
+                "time (UTC)": r.get("time_iso"),
+                "id": r["id"],
+            }
+            for r in scored
+        ]
+        st.dataframe(rows, hide_index=True, use_container_width=True)
+
+    with right:
+        st.subheader("Event Detail")
+        selected_id = st.selectbox("Select event", options=[r["id"] for r in scored])
+        selected = next(r for r in scored if r["id"] == selected_id)
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Score", selected["score"])
+        c2.metric("Mag", selected.get("mag"))
+        c3.metric("Depth (km)", selected.get("depth"))
+
+        st.markdown(f"**Place:** {selected.get('place') or 'unknown'}")
+        st.markdown(f"**Time:** {selected.get('time_iso') or 'unknown'}")
+        st.markdown(f"**Why this score:** {selected.get('explanation') or '—'}")
+
+        if marine_enrichment and selected.get("lat") and selected.get("lon"):
+            with st.spinner("Fetching marine conditions\u2026"):
+                conditions = fetch_marine_conditions(
+                    lat=selected["lat"], lon=selected["lon"]
+                )
+            if conditions is not None:
+                st.info(f"\U0001f30a Marine context: {conditions.summary()}")
+            else:
+                st.caption("Marine data unavailable for this location.")
+
+        st.markdown(
+            f"**Official alerts:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
         )
 
 
