@@ -11,9 +11,14 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Optional
 
-from src.ingest_usgs import fetch_summary
-from src.normalize import normalize_feature
-from src.cache import create_db, insert_raw_event
+try:
+    from src.ingest_usgs import fetch_summary
+    from src.normalize import normalize_feature
+    from src.cache import create_db, insert_raw_event
+except ModuleNotFoundError:
+    from ingest_usgs import fetch_summary
+    from normalize import normalize_feature
+    from cache import create_db, insert_raw_event
 
 
 DEFAULT_SAMPLE_PATH = "data/sample_all_hour.geojson"

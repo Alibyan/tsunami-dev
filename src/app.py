@@ -11,10 +11,16 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 import pydeck as pdk
 
-from src.cache import create_db, fetch_recent_events
-from src.enrich_marine import fetch_marine_conditions
-from src.run_ingest_pipeline import run as run_ingest
-from src.score import baseline_score
+try:
+    from src.cache import create_db, fetch_recent_events
+    from src.enrich_marine import fetch_marine_conditions
+    from src.run_ingest_pipeline import run as run_ingest
+    from src.score import baseline_score
+except ModuleNotFoundError:
+    from cache import create_db, fetch_recent_events
+    from enrich_marine import fetch_marine_conditions
+    from run_ingest_pipeline import run as run_ingest
+    from score import baseline_score
 
 
 def _to_iso(ms: int | None) -> str:
