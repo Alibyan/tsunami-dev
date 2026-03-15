@@ -87,7 +87,7 @@ METRICS_ARTIFACT_PATH = "artifacts/metrics_latest.json"
 
 
 def _nws_alert_definitions_markdown() -> str:
-    return "\n".join(
+    return "\n\n".join(
         [
             "**Warning**: Flooding wave possible or already happening; take urgent protective action.",
             "**Advisory**: Strong currents and dangerous waves possible; stay out of water and away from coasts.",

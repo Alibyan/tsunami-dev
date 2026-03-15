@@ -22,6 +22,7 @@ except ModuleNotFoundError:
 
 
 DEFAULT_SAMPLE_PATH = "data/sample_all_hour.geojson"
+REPLAY_EVENT_LIMIT = 20
 
 
 def load_local_payload(sample_path: str = DEFAULT_SAMPLE_PATH) -> dict[str, Any]:
@@ -71,6 +72,7 @@ def run(
     source = "live"
     if replay_mode:
         payload = load_local_payload(sample_path)
+        payload["features"] = (payload.get("features") or [])[:REPLAY_EVENT_LIMIT]
         source = "replay"
     else:
         try:
