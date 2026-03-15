@@ -233,19 +233,6 @@ def main() -> None:
         st.subheader("Mode")
         st.info("Replay mode active" if replay_mode else "Live mode with fallback")
 
-        with st.expander("Demo Operator Checklist", expanded=False):
-            st.markdown(
-                "\n".join(
-                    [
-                        "- Confirm local DB path is correct.",
-                        "- Click **Load events now** before presenting.",
-                        "- If live fetch is unstable, enable **Replay mode**.",
-                        "- Keep focus on ranked queue and factor explanation.",
-                        "- Reminder: this is triage support, not an official warning system.",
-                    ]
-                )
-            )
-
         with st.expander("NWS Alert Definitions", expanded=False):
             st.markdown(_nws_alert_definitions_markdown())
             st.markdown(
