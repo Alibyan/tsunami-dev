@@ -316,7 +316,7 @@ def main() -> None:
     sort_desc = bool(st.session_state["time_sort_desc"])
     queue_events = list(scored)
     queue_events.sort(
-        key=lambda r: max(r.get("time") or 0, r.get("updated") or 0),
+        key=lambda r: (r.get("time") if r.get("time") is not None else r.get("updated") or 0),
         reverse=sort_desc,
     )
 
