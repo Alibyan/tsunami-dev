@@ -122,6 +122,17 @@ def main() -> None:
         "Priority ranking for human review. Official alerts remain authoritative."
     )
 
+    # Persist timezone across reruns and browser refreshes via query params.
+    tz_param = st.query_params.get("tz", "UTC")
+    if isinstance(tz_param, list):
+        tz_param = tz_param[0] if tz_param else "UTC"
+    if tz_param not in TIMEZONE_OPTIONS:
+        tz_param = "UTC"
+    if "display_tz" not in st.session_state:
+        st.session_state["display_tz"] = tz_param
+    if st.session_state["display_tz"] not in TIMEZONE_OPTIONS:
+        st.session_state["display_tz"] = "UTC"
+
     with st.sidebar:
         st.header("Controls")
         db_path = st.text_input("SQLite path", value="data/events.sqlite")
@@ -149,9 +160,11 @@ def main() -> None:
         display_tz = st.selectbox(
             "Display timezone",
             options=TIMEZONE_OPTIONS,
-            index=0,
+            index=TIMEZONE_OPTIONS.index(st.session_state["display_tz"]),
+            key="display_tz",
             help="Controls how event and refresh timestamps are shown in the UI.",
         )
+        st.query_params["tz"] = display_tz
         if st.button("Ensure local DB"):
             path = create_db(db_path)
             st.success(f"Created SQLite DB at {path}")
