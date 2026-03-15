@@ -12,12 +12,12 @@ import streamlit as st
 import pydeck as pdk
 
 try:
-    from src.cache import create_db, fetch_recent_events
+    from src.cache import clear_events, create_db, fetch_recent_events
     from src.enrich_marine import fetch_marine_conditions
     from src.run_ingest_pipeline import run as run_ingest
     from src.score import baseline_score
 except ModuleNotFoundError:
-    from cache import create_db, fetch_recent_events
+    from cache import clear_events, create_db, fetch_recent_events
     from enrich_marine import fetch_marine_conditions
     from run_ingest_pipeline import run as run_ingest
     from score import baseline_score
@@ -89,7 +89,7 @@ METRICS_ARTIFACT_PATH = "artifacts/metrics_latest.json"
 def _nws_alert_definitions_markdown() -> str:
     return "\n".join(
         [
-            "**Warning**: Inundating wave possible or already occurring; urgent protective action needed.",
+            "**Warning**: Flooding wave possible or already happening; take urgent protective action.",
             "**Advisory**: Strong currents and dangerous waves possible; stay out of water and away from coasts.",
             "**Watch**: Potential hazard under evaluation; stay alert and prepare to act.",
             "**Information Statement**: No major threat expected, issued for situational awareness.",
@@ -137,6 +137,24 @@ def main() -> None:
         st.header("Controls")
         db_path = st.text_input("SQLite path", value="data/events.sqlite")
         replay_mode = st.toggle("Replay mode (local sample)", value=False)
+        if "prev_replay_mode" not in st.session_state:
+            st.session_state["prev_replay_mode"] = replay_mode
+        if "replay_waiting_load" not in st.session_state:
+            st.session_state["replay_waiting_load"] = False
+
+        if replay_mode and not st.session_state["prev_replay_mode"]:
+            removed = clear_events(db_path)
+            st.session_state["replay_waiting_load"] = True
+            st.session_state.pop("selected_event_id", None)
+            st.info(
+                f"Replay mode enabled. Cleared {removed} cached events. "
+                "Click 'Load events now' to load saved replay data."
+            )
+        elif not replay_mode and st.session_state["prev_replay_mode"]:
+            st.session_state["replay_waiting_load"] = False
+
+        st.session_state["prev_replay_mode"] = replay_mode
+
         sample_path = st.text_input(
             "Replay sample path", value="data/sample_all_hour.geojson"
         )
@@ -176,6 +194,7 @@ def main() -> None:
                     sample_path=sample_path,
                     fallback_on_error=True,
                 )
+                st.session_state["replay_waiting_load"] = False
                 st.success(
                     f"Loaded {result['stored']} events (source={result['source']})"
                 )
@@ -233,7 +252,7 @@ def main() -> None:
                 f"**Official alerts live here:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
             )
 
-    if auto_refresh_enabled:
+    if auto_refresh_enabled and not st.session_state.get("replay_waiting_load", False):
 
         @st.fragment(run_every=f"{refresh_interval_sec}s")
         def _auto_refresh_tick() -> None:
@@ -263,6 +282,12 @@ def main() -> None:
             st.rerun()
 
         _auto_refresh_tick()
+
+    if replay_mode and st.session_state.get("replay_waiting_load", False):
+        st.info(
+            "Replay mode is on and cache is cleared. Click 'Load events now' in the sidebar to load saved replay data."
+        )
+        st.stop()
 
     records = fetch_recent_events(path=db_path, limit=max_rows)
     scored = [

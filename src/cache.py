@@ -100,3 +100,16 @@ def fetch_recent_events(
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
     return rows
+
+
+def clear_events(path: str = "data/events.sqlite") -> int:
+    """Delete all cached events and return the number of rows removed."""
+    create_db(path)
+    conn = sqlite3.connect(path)
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM events")
+    count = int(cur.fetchone()[0])
+    cur.execute("DELETE FROM events")
+    conn.commit()
+    conn.close()
+    return count
