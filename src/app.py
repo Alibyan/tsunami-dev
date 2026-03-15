@@ -215,8 +215,6 @@ def main() -> None:
                 f"**Official alerts live here:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
             )
 
-
-
     if auto_refresh_enabled:
 
         @st.fragment(run_every=f"{refresh_interval_sec}s")
@@ -327,7 +325,9 @@ def main() -> None:
             f"{len(queue_events)} events · "
             f"{'newest to oldest' if sort_desc else 'oldest to newest'}"
         )
-    st.caption("Tip: click a row in the table to auto-select that event in Event Detail.")
+    st.caption(
+        "Tip: click a row in the table to auto-select that event in Event Detail."
+    )
     st.caption(f"Times shown in {display_tz}")
 
     rows = [
@@ -382,7 +382,9 @@ def main() -> None:
 
     if selected.get("lat") and selected.get("lon"):
         with st.spinner("Fetching marine conditions\u2026"):
-            conditions = fetch_marine_conditions(lat=selected["lat"], lon=selected["lon"])
+            conditions = fetch_marine_conditions(
+                lat=selected["lat"], lon=selected["lon"]
+            )
         if conditions is not None:
             st.info(f"\U0001f30a Marine context: {conditions.summary()}")
         else:

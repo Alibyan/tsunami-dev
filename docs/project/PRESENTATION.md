@@ -144,7 +144,7 @@ Speaker notes (10-15s):
 
 ## 3-4 Minute Speaker Script (Condensed)
 
-"We built an offshore earthquake triage support tool to help analysts prioritize review under time pressure. The app ingests USGS events, normalizes and caches them locally, then computes an explainable score using magnitude, depth, and recency. In the queue, we can immediately focus on the highest-priority items. In Event Detail, we can see exactly why an event is ranked high, and we include direct links to official sources. The map adds fast spatial context. Reliability is built in: if live data is unstable, replay mode keeps the same interface and workflow working. We also run optional model evaluation and surface metrics, but we keep the product framing responsible: this tool prioritizes human attention and does not replace official warning agencies." 
+"We built an offshore earthquake triage support tool to help analysts prioritize review under time pressure. The app ingests USGS events, normalizes and caches them locally, then computes an explainable score using magnitude, depth, and recency. In the queue, we can immediately focus on the highest-priority items. In Event Detail, we can see exactly why an event is ranked high, and we include direct links to official sources. The map adds fast spatial context. Reliability is built in: if live data is unstable, replay mode keeps the same interface and workflow working. We also run optional model evaluation and surface metrics, but we keep the product framing responsible: this tool prioritizes human attention and does not replace official warning agencies."
 
 ## Failure/Backup Script (30 seconds)
 
