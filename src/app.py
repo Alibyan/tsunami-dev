@@ -205,7 +205,7 @@ def main() -> None:
         st.subheader("Auto Refresh")
         auto_refresh_enabled = st.toggle(
             "Auto-ingest new events",
-            value=False,
+            value=True,
             help="Periodically fetches the USGS feed and updates the local cache.",
         )
         refresh_interval_sec = st.selectbox(
