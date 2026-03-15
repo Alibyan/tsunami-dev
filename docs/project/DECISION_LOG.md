@@ -115,3 +115,19 @@ Add one entry whenever you make a decision that affects:
 - **Tradeoffs accepted:** Less flashy positioning.
 - **Files affected:** UI text, README, slides, runbook, disclaimers
 - **Follow-up required:** Review all public copy before release.
+
+### D-006
+- **Date:** 2026-03-15
+- **Phase:** Phase 8
+- **Decision:** Complete final wording review and freeze public-facing safety language.
+- **Status:** accepted
+- **Owner:** Safety Domain
+- **Context:** The system is demo-ready, but Phase 8 requires an explicit sign-off that public copy does not overclaim forecasting or warning capability.
+- **Options considered:**
+  - leave wording review implicit
+  - record a formal sign-off before release
+- **Chosen option:** record a formal sign-off before release
+- **Why this option won:** It creates an audit trail that the UI, README, and demo framing were checked against the project's safety constraints.
+- **Tradeoffs accepted:** Slightly more release documentation in exchange for clearer review evidence.
+- **Files affected:** src/app.py, README.md, docs/project/DEMO_RUNBOOK.md, docs/project/PRESENTATION.md
+- **Follow-up required:** Keep future UI or pitch copy aligned with the triage-support framing and official-alert disclaimer.

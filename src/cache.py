@@ -1,8 +1,20 @@
 """SQLite cache helpers for Phase 00."""
 
+from datetime import datetime, timezone
 import os
 import sqlite3
 from typing import Any
+
+
+def _ensure_ingested_at_column(conn: sqlite3.Connection) -> None:
+    cur = conn.cursor()
+    cur.execute("PRAGMA table_info(events)")
+    column_names = {row[1] for row in cur.fetchall()}
+    if "ingested_at_utc" not in column_names:
+        cur.execute("ALTER TABLE events ADD COLUMN ingested_at_utc TEXT")
+        cur.execute(
+            "UPDATE events SET ingested_at_utc = CURRENT_TIMESTAMP WHERE ingested_at_utc IS NULL"
+        )
 
 
 def create_db(path: str = "data/events.sqlite") -> str:
@@ -15,6 +27,7 @@ def create_db(path: str = "data/events.sqlite") -> str:
         id TEXT PRIMARY KEY,
         time INTEGER,
         updated INTEGER,
+        ingested_at_utc TEXT DEFAULT CURRENT_TIMESTAMP,
         mag REAL,
         depth REAL,
         lat REAL,
@@ -26,6 +39,7 @@ def create_db(path: str = "data/events.sqlite") -> str:
     )
     """
     )
+    _ensure_ingested_at_column(conn)
     conn.commit()
     conn.close()
     return path
@@ -37,13 +51,20 @@ def insert_raw_event(
     cur = conn.cursor()
     cur.execute(
         """
-    INSERT OR REPLACE INTO events (id, time, updated, mag, depth, lat, lon, place, urls, tsunami, raw_json)
-    VALUES (:id, :time, :updated, :mag, :depth, :lat, :lon, :place, :urls, :tsunami, :raw_json)
+    INSERT OR REPLACE INTO events (
+        id, time, updated, ingested_at_utc, mag, depth, lat, lon, place, urls, tsunami, raw_json
+    )
+    VALUES (
+        :id, :time, :updated, :ingested_at_utc, :mag, :depth, :lat, :lon, :place, :urls, :tsunami, :raw_json
+    )
     """,
         {
             "id": evt_id,
             "time": fields.get("time"),
             "updated": fields.get("updated"),
+            "ingested_at_utc": datetime.now(timezone.utc).strftime(
+                "%Y-%m-%d %H:%M:%S UTC"
+            ),
             "mag": fields.get("mag"),
             "depth": fields.get("depth"),
             "lat": fields.get("lat"),
