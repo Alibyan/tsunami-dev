@@ -6,10 +6,10 @@ Use historical USGS data to evaluate the baseline and optionally add a lightweig
 
 ## Primary agents
 
-- `AGENT_API_INGESTION.md`
-- `AGENT_ML_EVALUATION.md`
-- `AGENT_FEATURE_BASELINE.md`
-- `AGENT_NOTEBOOK_EDA.md`
+- `../agents/AGENT_API_INGESTION.md`
+- `../agents/AGENT_ML_EVALUATION.md`
+- `../agents/AGENT_FEATURE_BASELINE.md`
+- `../agents/AGENT_NOTEBOOK_EDA.md`
 
 ## Tasks
 
@@ -18,26 +18,26 @@ Use historical USGS data to evaluate the baseline and optionally add a lightweig
 - Store training-ready historical records
 - Document pagination and reproducibility
 
-**Owner:** `AGENT_API_INGESTION.md`
+**Owner:** `../agents/AGENT_API_INGESTION.md`
 
 ### Task 6.2 — Build evaluation frame
 - Select features and labels
 - Use time-based splits
 - Compare against the baseline first
 
-**Owner:** `AGENT_ML_EVALUATION.md`
+**Owner:** `../agents/AGENT_ML_EVALUATION.md`
 
 ### Task 6.3 — Train lightweight model
 - Prefer logistic regression first
 - Add a slightly richer model only if there is clear value
 
-**Owner:** `AGENT_ML_EVALUATION.md`
+**Owner:** `../agents/AGENT_ML_EVALUATION.md`
 
 ### Task 6.4 — Summarize model limits
 - Record false positives
 - Confirm that model output still means triage priority, not certainty
 
-**Owner:** `AGENT_ML_EVALUATION.md`
+**Owner:** `../agents/AGENT_ML_EVALUATION.md`
 
 ## Outputs
 

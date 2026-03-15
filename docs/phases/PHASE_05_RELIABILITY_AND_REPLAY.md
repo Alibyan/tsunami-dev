@@ -6,9 +6,9 @@ Make the project safe to demo live, under poor network conditions, or with optio
 
 ## Primary agents
 
-- `AGENT_RELIABILITY_DEMO.md`
-- `AGENT_CACHE_DB.md`
-- `AGENT_TESTING_QA.md`
+- `../agents/AGENT_RELIABILITY_DEMO.md`
+- `../agents/AGENT_CACHE_DB.md`
+- `../agents/AGENT_TESTING_QA.md`
 
 ## Tasks
 
@@ -16,26 +16,26 @@ Make the project safe to demo live, under poor network conditions, or with optio
 - Ship a cached feed snapshot or a replay dataset
 - Make replay launchable with one command or one toggle
 
-**Owner:** `AGENT_RELIABILITY_DEMO.md`
+**Owner:** `../agents/AGENT_RELIABILITY_DEMO.md`
 
 ### Task 5.2 — Add degraded-mode rules
 - Hide broken optional panels gracefully
 - Keep the core queue, map, and detail view alive
 
-**Owner:** `AGENT_RELIABILITY_DEMO.md`
+**Owner:** `../agents/AGENT_RELIABILITY_DEMO.md`
 
 ### Task 5.3 — Add logging and health checks
 - Log ingest success, failure, and record counts
 - Expose enough info to debug quickly without cluttering the demo
 
-**Owner:** `AGENT_RELIABILITY_DEMO.md`
+**Owner:** `../agents/AGENT_RELIABILITY_DEMO.md`
 
 ### Task 5.4 — Run high-value QA
 - Smoke test ingest
 - Smoke test app startup
 - Verify replay mode works without network
 
-**Owner:** `AGENT_TESTING_QA.md`
+**Owner:** `../agents/AGENT_TESTING_QA.md`
 
 ## Outputs
 

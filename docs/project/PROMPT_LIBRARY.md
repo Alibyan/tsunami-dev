@@ -8,7 +8,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Scope the next task
 
-> Using `AGENT_PROJECT_LEAD.md` and `AGENT_TASK_ROUTER.md`, take the current phase and propose the single best next task for the MVP. Include: objective, files likely to change, acceptance criteria, and handoff trigger.
+> Using `../agents/AGENT_PROJECT_LEAD.md` and `../agents/AGENT_TASK_ROUTER.md`, take the current phase and propose the single best next task for the MVP. Include: objective, files likely to change, acceptance criteria, and handoff trigger.
 
 ### Prevent scope creep
 
@@ -18,7 +18,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Create local project skeleton
 
-> Using `AGENT_REPO_BOOTSTRAP.md`, propose a clean Python repo layout for this project with `src/`, `app/`, `data/`, `scripts/`, `tests/`, and `docs/`. Include `requirements.txt`, `.env.example`, and VS Code tasks.
+> Using `../agents/AGENT_REPO_BOOTSTRAP.md`, propose a clean Python repo layout for this project with `src/`, `app/`, `data/`, `scripts/`, `tests/`, and `docs/`. Include `requirements.txt`, `.env.example`, and VS Code tasks.
 
 ### Add run commands
 
@@ -28,7 +28,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Enforce MCP boundary
 
-> Using `AGENT_MCP_WORKFLOW.md`, review this implementation and identify anything that incorrectly depends on MCP at runtime. Rewrite the design so MCP stays a build-time helper only.
+> Using `../agents/AGENT_MCP_WORKFLOW.md`, review this implementation and identify anything that incorrectly depends on MCP at runtime. Rewrite the design so MCP stays a build-time helper only.
 
 ### Free MCP setup summary
 
@@ -38,7 +38,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Build a fetcher
 
-> Using `AGENT_API_INGESTION.md`, write a small Python module that fetches the live upstream event feed, logs request failures, and stores raw responses for debugging. Keep the code clean and testable.
+> Using `../agents/AGENT_API_INGESTION.md`, write a small Python module that fetches the live upstream event feed, logs request failures, and stores raw responses for debugging. Keep the code clean and testable.
 
 ### Historical pull path
 
@@ -48,7 +48,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Normalize one payload
 
-> Using `AGENT_SCHEMA_VALIDATION.md`, turn this raw payload into a normalized event model. Show required fields, optional fields, type conversions, UTC timestamp handling, and null rules.
+> Using `../agents/AGENT_SCHEMA_VALIDATION.md`, turn this raw payload into a normalized event model. Show required fields, optional fields, type conversions, UTC timestamp handling, and null rules.
 
 ### Add parser safety
 
@@ -58,7 +58,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Create SQLite schema
 
-> Using `AGENT_CACHE_DB.md`, propose a SQLite schema for normalized events, raw payload references, and replay-mode reads. Include keys, indexes, and idempotent upsert strategy.
+> Using `../agents/AGENT_CACHE_DB.md`, propose a SQLite schema for normalized events, raw payload references, and replay-mode reads. Include keys, indexes, and idempotent upsert strategy.
 
 ### Replay-friendly read model
 
@@ -68,7 +68,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Build explainable score
 
-> Using `AGENT_FEATURE_BASELINE.md`, design a transparent triage score from the normalized fields. Include exact feature inputs, weighting logic, normalization notes, and a per-event explanation payload for the UI.
+> Using `../agents/AGENT_FEATURE_BASELINE.md`, design a transparent triage score from the normalized fields. Include exact feature inputs, weighting logic, normalization notes, and a per-event explanation payload for the UI.
 
 ### Compare thresholds
 
@@ -78,7 +78,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Evaluate baseline first
 
-> Using `AGENT_ML_EVALUATION.md`, define a historical evaluation plan for the rule-based baseline before adding any model. Include time-based splits, metrics, and failure analysis.
+> Using `../agents/AGENT_ML_EVALUATION.md`, define a historical evaluation plan for the rule-based baseline before adding any model. Include time-based splits, metrics, and failure analysis.
 
 ### Add lightweight model carefully
 
@@ -88,7 +88,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Build dashboard shell
 
-> Using `AGENT_STREAMLIT_UI.md`, create a Streamlit layout with a ranked event list, map section, detail panel, score explanation area, and clear empty/error states.
+> Using `../agents/AGENT_STREAMLIT_UI.md`, create a Streamlit layout with a ranked event list, map section, detail panel, score explanation area, and clear empty/error states.
 
 ### Detail card copy
 
@@ -98,7 +98,7 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Add replay mode
 
-> Using `AGENT_RELIABILITY_DEMO.md`, implement a replay mode that loads cached events and drives the same UI path as live mode. Include a switch and a fallback message.
+> Using `../agents/AGENT_RELIABILITY_DEMO.md`, implement a replay mode that loads cached events and drives the same UI path as live mode. Include a switch and a fallback message.
 
 ### Graceful degradation
 
@@ -108,13 +108,13 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Add one safe enrichment
 
-> Using `AGENT_ENRICHMENT_APIS.md`, propose one enrichment that improves the demo story without becoming a critical dependency. Include timeout policy, cache policy, and UI fallback behavior.
+> Using `../agents/AGENT_ENRICHMENT_APIS.md`, propose one enrichment that improves the demo story without becoming a critical dependency. Include timeout policy, cache policy, and UI fallback behavior.
 
 ## Testing prompts
 
 ### Smoke test set
 
-> Using `AGENT_TESTING_QA.md`, generate a minimal smoke test suite for live fetch, parsing, cache upsert, replay mode, and dashboard startup.
+> Using `../agents/AGENT_TESTING_QA.md`, generate a minimal smoke test suite for live fetch, parsing, cache upsert, replay mode, and dashboard startup.
 
 ### Manual QA checklist
 
@@ -124,19 +124,19 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Tighten the demo surface
 
-> Using `AGENT_VISUAL_STORYTELLING.md`, simplify this Streamlit layout for judges. Reduce clutter, improve the visual hierarchy, and keep the top-ranked story obvious.
+> Using `../agents/AGENT_VISUAL_STORYTELLING.md`, simplify this Streamlit layout for judges. Reduce clutter, improve the visual hierarchy, and keep the top-ranked story obvious.
 
 ## Notebook prompts
 
 ### Quick profile notebook
 
-> Using `AGENT_NOTEBOOK_EDA.md`, create a notebook outline that profiles missingness, magnitude distribution, recency, and the first baseline score outputs from cached data.
+> Using `../agents/AGENT_NOTEBOOK_EDA.md`, create a notebook outline that profiles missingness, magnitude distribution, recency, and the first baseline score outputs from cached data.
 
 ## Pitch and docs prompts
 
 ### README draft
 
-> Using `AGENT_PITCH_DOCS.md`, write a concise README with problem framing, architecture, local run steps, limitations, and demo flow.
+> Using `../agents/AGENT_PITCH_DOCS.md`, write a concise README with problem framing, architecture, local run steps, limitations, and demo flow.
 
 ### Demo script draft
 
@@ -146,10 +146,10 @@ Use these prompts with the relevant agent file open beside your code.
 
 ### Claims review
 
-> Using `AGENT_SAFETY_DOMAIN.md`, review this UI text and README copy for overclaiming. Rewrite anything that sounds like a formal warning or official prediction.
+> Using `../agents/AGENT_SAFETY_DOMAIN.md`, review this UI text and README copy for overclaiming. Rewrite anything that sounds like a formal warning or official prediction.
 
 ## Router prompts
 
 ### Route the next task
 
-> Using `AGENT_TASK_ROUTER.md`, classify this task by phase and task type, choose the primary owner agent, list support agents, state prerequisites, and give the next concrete implementation step.
+> Using `../agents/AGENT_TASK_ROUTER.md`, classify this task by phase and task type, choose the primary owner agent, list support agents, state prerequisites, and give the next concrete implementation step.

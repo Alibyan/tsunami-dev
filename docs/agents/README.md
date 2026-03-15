@@ -69,19 +69,19 @@ The last 4 specialist agents are optional, but they are included in this pack be
 
 - `AGENT_TASK_ROUTER.md` routes a concrete task to the right specialist agent(s)
 - `../phases/PHASE_00_MASTER_PLAN.md` defines the phase ladder
-- `../TASK_AGENT_WIRING_MATRIX.md` is the quick lookup table for task ownership
+- `../project/TASK_AGENT_WIRING_MATRIX.md` is the quick lookup table for task ownership
 
 
 ## Execution-control files at pack root
 
 These files sit at the pack root and help coordinate the build across all phases:
 
-- `../DEFINITION_OF_DONE.md`
-- `../DECISION_LOG.md`
-- `../TASK_DEPENDENCY_MATRIX.md`
-- `../DATA_CONTRACTS.md`
-- `../PROMPT_LIBRARY.md`
-- `../DEMO_RUNBOOK.md`
-- `../RISK_REGISTER.md`
+- `../project/DEFINITION_OF_DONE.md`
+- `../project/DECISION_LOG.md`
+- `../project/TASK_DEPENDENCY_MATRIX.md`
+- `../project/DATA_CONTRACTS.md`
+- `../project/PROMPT_LIBRARY.md`
+- `../project/DEMO_RUNBOOK.md`
+- `../project/RISK_REGISTER.md`
 
 Use them together with the agent files when you want stronger execution discipline, clearer handoffs, and a safer demo path.

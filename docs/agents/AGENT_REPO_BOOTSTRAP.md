@@ -35,7 +35,7 @@ Create and maintain the initial repository structure, local developer workflow, 
 
 ## Workflow
 
-- Create or verify folders such as `src/`, `data/`, `notebooks/`, `tests/`, and `agents/`
+- Create or verify folders such as `src/`, `data/`, `notebooks/`, `tests/`, and `docs/agents/`
 - Establish the primary scripts: ingest, backfill, train, app
 - Create `requirements.txt` or equivalent with minimal packages
 - Create `.env.example` only if secrets or env-driven configuration are actually needed
@@ -70,4 +70,4 @@ Target a structure like:
   - sample_all_hour.geojson
 - notebooks/
 - tests/
-- agents/
+- docs/agents/

@@ -2,6 +2,13 @@
 
 Phase 00 scaffold: minimal repo layout and starter scripts.
 
+Documentation layout
+
+- Docs index: `docs/README.md`
+- Agent pack: `docs/agents/`
+- Phase plans: `docs/phases/`
+- Project control docs: `docs/project/`
+
 Quick start
 
 1. Create a virtualenv and install dependencies:

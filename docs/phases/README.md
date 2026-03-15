@@ -22,17 +22,17 @@ This sequencing matches the project notes and the original agent pack philosophy
 - Start with `PHASE_00_MASTER_PLAN.md`
 - Open the current phase file
 - Pull the matching specialist agent from `../agents/`
-- Use `AGENT_TASK_ROUTER.md` to assign the current task to the right agent or sequence of agents
+- Use `../agents/AGENT_TASK_ROUTER.md` to assign the current task to the right agent or sequence of agents
 
 
 ## Supporting control files
 
 At the pack root, use these files alongside the phase documents:
 
-- `../DEFINITION_OF_DONE.md` for acceptance criteria
-- `../DECISION_LOG.md` for key tradeoffs
-- `../TASK_DEPENDENCY_MATRIX.md` for blockers and sequencing
-- `../DATA_CONTRACTS.md` for schema alignment
-- `../PROMPT_LIBRARY.md` for copy-paste Copilot prompts
-- `../DEMO_RUNBOOK.md` for live demo execution
-- `../RISK_REGISTER.md` for fallback planning
+- `../project/DEFINITION_OF_DONE.md` for acceptance criteria
+- `../project/DECISION_LOG.md` for key tradeoffs
+- `../project/TASK_DEPENDENCY_MATRIX.md` for blockers and sequencing
+- `../project/DATA_CONTRACTS.md` for schema alignment
+- `../project/PROMPT_LIBRARY.md` for copy-paste Copilot prompts
+- `../project/DEMO_RUNBOOK.md` for live demo execution
+- `../project/RISK_REGISTER.md` for fallback planning
