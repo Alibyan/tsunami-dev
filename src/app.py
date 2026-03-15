@@ -160,7 +160,6 @@ def main() -> None:
         display_tz = st.selectbox(
             "Display timezone",
             options=TIMEZONE_OPTIONS,
-            index=TIMEZONE_OPTIONS.index(st.session_state["display_tz"]),
             key="display_tz",
             help="Controls how event and refresh timestamps are shown in the UI.",
         )
