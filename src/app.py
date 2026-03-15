@@ -125,15 +125,15 @@ def main() -> None:
     )
 
     # Persist timezone across reruns and browser refreshes via query params.
-    tz_param = st.query_params.get("tz", "UTC")
+    tz_param = st.query_params.get("tz", "America/New_York")
     if isinstance(tz_param, list):
-        tz_param = tz_param[0] if tz_param else "UTC"
+        tz_param = tz_param[0] if tz_param else "America/New_York"
     if tz_param not in TIMEZONE_OPTIONS:
-        tz_param = "UTC"
+        tz_param = "America/New_York"
     if "display_tz" not in st.session_state:
         st.session_state["display_tz"] = tz_param
     if st.session_state["display_tz"] not in TIMEZONE_OPTIONS:
-        st.session_state["display_tz"] = "UTC"
+        st.session_state["display_tz"] = "America/New_York"
 
     db_path = DEFAULT_DB_PATH
     sample_path = DEFAULT_REPLAY_SAMPLE_PATH
