@@ -7,15 +7,24 @@ def _clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
 
 
+# Mw scoring range: Mw 4.0 -> 0 pts, Mw 9.0 -> 50 pts (linear in Mw).
+# Linear-in-Mw is the physically correct choice: Mw is already a base-10 log
+# scale of seismic moment, so each unit represents ~32x more energy. A uniform
+# mapping honours that scale without introducing artificial kinks.
+_MW_MIN = 4.0
+_MW_MAX = 9.0
+
+
 def _magnitude_factor(mag: float) -> float:
-    """Magnitude contribution in range 0-50 with sharper rise above M6."""
+    """Moment Magnitude (Mw) contribution in range 0-50.
+
+    Uses the Mw value reported by USGS. Linear mapping over Mw 4.0-9.0 is
+    appropriate because Mw is itself logarithmic — equal steps in Mw represent
+    equal multiplicative steps in seismic moment (~32x energy per unit).
+    """
     if mag <= 0:
         return 0.0
-    if mag < 4.0:
-        return (mag / 4.0) * 10.0
-    if mag < 6.0:
-        return 10.0 + ((mag - 4.0) / 2.0) * 20.0
-    return 30.0 + _clamp((mag - 6.0) * 10.0, 0.0, 20.0)
+    return _clamp(50.0 * (mag - _MW_MIN) / (_MW_MAX - _MW_MIN), 0.0, 50.0)
 
 
 def _depth_factor(depth_km: float | None) -> float:
@@ -54,11 +63,11 @@ def _explanation_text(
     level = _priority_label(total_score)
 
     if mag >= 7.0:
-        mag_phrase = f"a significant M{mag:.1f} magnitude"
+        mag_phrase = f"a significant Mw{mag:.1f}"
     elif mag >= 6.0:
-        mag_phrase = f"an elevated M{mag:.1f} magnitude"
+        mag_phrase = f"an elevated Mw{mag:.1f}"
     else:
-        mag_phrase = f"a moderate M{mag:.1f} magnitude"
+        mag_phrase = f"a moderate Mw{mag:.1f}"
 
     if depth is None:
         depth_phrase = "an unknown depth"

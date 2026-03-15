@@ -6,7 +6,9 @@ from src.enrich_marine import MarineConditions, fetch_marine_conditions
 
 
 def test_marine_conditions_summary_full():
-    c = MarineConditions(wave_height_m=2.3, wave_period_s=12.0, wave_direction_deg=270.0)
+    c = MarineConditions(
+        wave_height_m=2.3, wave_period_s=12.0, wave_direction_deg=270.0
+    )
     summary = c.summary()
     assert "2.3 m" in summary
     assert "12 s" in summary
@@ -21,7 +23,9 @@ def test_marine_conditions_summary_partial():
 
 
 def test_marine_conditions_summary_empty():
-    c = MarineConditions(wave_height_m=None, wave_period_s=None, wave_direction_deg=None)
+    c = MarineConditions(
+        wave_height_m=None, wave_period_s=None, wave_direction_deg=None
+    )
     assert c.summary() == "No wave data available."
 
 
@@ -46,7 +50,9 @@ def test_fetch_marine_conditions_success(monkeypatch):
 
 
 def test_fetch_marine_conditions_returns_none_on_error():
-    with patch("src.enrich_marine.requests.get", side_effect=Exception("network error")):
+    with patch(
+        "src.enrich_marine.requests.get", side_effect=Exception("network error")
+    ):
         result = fetch_marine_conditions(lat=35.0, lon=139.0)
     assert result is None
 

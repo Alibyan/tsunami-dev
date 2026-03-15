@@ -18,7 +18,9 @@ def _to_iso(ms: int | None) -> str:
     if not ms:
         return "unknown"
     try:
-        return datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc).isoformat()
+        return datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc).strftime(
+            "%d %b %Y  %I:%M %p UTC"
+        )
     except Exception:
         return "unknown"
 
@@ -233,8 +235,8 @@ def main() -> None:
             {
                 "score": r["score"],
                 "place": r.get("place"),
-                "mag": r.get("mag"),
-                "depth": r.get("depth"),
+                "Mw": r.get("mag"),
+                "depth (km)": r.get("depth"),
                 "tsunami \u26a0": r.get("tsunami"),
                 "time (UTC)": r.get("time_iso"),
                 "id": r["id"],
@@ -250,7 +252,7 @@ def main() -> None:
 
         c1, c2, c3 = st.columns(3)
         c1.metric("Score", selected["score"])
-        c2.metric("Mag", selected.get("mag"))
+        c2.metric("Mw", selected.get("mag"))
         c3.metric("Depth (km)", selected.get("depth"))
 
         st.markdown(f"**Place:** {selected.get('place') or 'unknown'}")
@@ -267,9 +269,7 @@ def main() -> None:
             else:
                 st.caption("Marine data unavailable for this location.")
 
-        st.markdown(
-            f"**Official alerts:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
-        )
+        st.markdown(f"**Official alerts:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})")
 
 
 if __name__ == "__main__":
