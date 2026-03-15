@@ -84,6 +84,8 @@ st.set_page_config(page_title="Offshore Quake Triage", layout="wide")
 
 TSUNAMI_GOV_URL = "https://www.tsunami.gov/"
 METRICS_ARTIFACT_PATH = "artifacts/metrics_latest.json"
+DEFAULT_DB_PATH = "data/events.sqlite"
+DEFAULT_REPLAY_SAMPLE_PATH = "data/sample_all_hour.geojson"
 
 
 def _nws_alert_definitions_markdown() -> str:
@@ -133,9 +135,11 @@ def main() -> None:
     if st.session_state["display_tz"] not in TIMEZONE_OPTIONS:
         st.session_state["display_tz"] = "UTC"
 
+    db_path = DEFAULT_DB_PATH
+    sample_path = DEFAULT_REPLAY_SAMPLE_PATH
+
     with st.sidebar:
         st.header("Controls")
-        db_path = st.text_input("SQLite path", value="data/events.sqlite")
         replay_mode = st.toggle("Replay mode (local sample)", value=False)
         if "prev_replay_mode" not in st.session_state:
             st.session_state["prev_replay_mode"] = replay_mode
@@ -154,10 +158,6 @@ def main() -> None:
             st.session_state["replay_waiting_load"] = False
 
         st.session_state["prev_replay_mode"] = replay_mode
-
-        sample_path = st.text_input(
-            "Replay sample path", value="data/sample_all_hour.geojson"
-        )
         max_rows_raw = st.text_input("Max events", value="100")
         st.caption("Min: 10   Max: 500")
         try:
