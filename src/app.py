@@ -4,6 +4,9 @@ from datetime import datetime, timezone
 import json
 import os
 from statistics import fmean
+import time
+from typing import Any
+from zoneinfo import ZoneInfo
 
 import streamlit as st
 import pydeck as pdk
@@ -25,7 +28,39 @@ def _to_iso(ms: int | None) -> str:
         return "unknown"
 
 
-def _score_records(records: list[dict]) -> list[dict]:
+TIMEZONE_OPTIONS = [
+    "UTC",
+    "America/Los_Angeles",
+    "America/Denver",
+    "America/Chicago",
+    "America/New_York",
+    "Europe/London",
+    "Europe/Paris",
+    "Asia/Tokyo",
+    "Australia/Sydney",
+]
+
+
+def _resolve_timezone(tz_name: str):
+    try:
+        return ZoneInfo(tz_name)
+    except Exception:
+        return timezone.utc
+
+
+def _to_display_time(ms: int | None, tz_name: str = "UTC") -> str:
+    if not ms:
+        return "unknown"
+    try:
+        tz_obj = _resolve_timezone(tz_name)
+        dt = datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc).astimezone(tz_obj)
+        tz_label = dt.tzname() or tz_name
+        return dt.strftime("%d %b %Y  %I:%M %p ") + tz_label
+    except Exception:
+        return "unknown"
+
+
+def _score_records(records: list[dict], display_tz: str = "UTC") -> list[dict]:
     scored = []
     for r in records:
         result = baseline_score(r)
@@ -33,7 +68,7 @@ def _score_records(records: list[dict]) -> list[dict]:
         row["score"] = result["score"]
         row["explanation"] = result.get("explanation")
         row["factors"] = result["factors"]
-        row["time_iso"] = _to_iso(row.get("time"))
+        row["time_iso"] = _to_display_time(row.get("time"), tz_name=display_tz)
         scored.append(row)
     scored.sort(key=lambda x: x["score"], reverse=True)
     return scored
@@ -88,15 +123,28 @@ def main() -> None:
         sample_path = st.text_input(
             "Replay sample path", value="data/sample_all_hour.geojson"
         )
-        max_rows = st.slider(
-            "Max events", min_value=10, max_value=500, value=100, step=10
-        )
-        min_score = st.slider(
-            "Minimum score",
-            min_value=-1000.0,
-            max_value=20.0,
-            value=-1000.0,
-            step=0.5,
+        max_rows_raw = st.text_input("Max events", value="100")
+        st.caption("Min: 10   Max: 500")
+        try:
+            max_rows = int(max_rows_raw)
+        except Exception:
+            max_rows = 100
+            st.warning("Max events must be a whole number. Using default 100.")
+        max_rows = max(10, min(500, max_rows))
+
+        min_magnitude_raw = st.text_input("Minimum magnitude (Mw)", value="0.0")
+        st.caption("Min: 0.0   Max: 10.0")
+        try:
+            min_magnitude = float(min_magnitude_raw)
+        except Exception:
+            min_magnitude = 0.0
+            st.warning("Minimum magnitude must be numeric. Using default 0.0.")
+        min_magnitude = max(0.0, min(10.0, min_magnitude))
+        display_tz = st.selectbox(
+            "Display timezone",
+            options=TIMEZONE_OPTIONS,
+            index=0,
+            help="Controls how event and refresh timestamps are shown in the UI.",
         )
         if st.button("Ensure local DB"):
             path = create_db(db_path)
@@ -115,6 +163,34 @@ def main() -> None:
                 )
             except Exception as exc:
                 st.error(f"Load failed: {exc}")
+
+        st.divider()
+        st.subheader("Auto Refresh")
+        auto_refresh_enabled = st.toggle(
+            "Auto-ingest new events",
+            value=False,
+            help="Periodically fetches the USGS feed and updates the local cache.",
+        )
+        refresh_interval_sec = st.selectbox(
+            "Refresh interval",
+            options=[15, 30, 60, 120],
+            index=1,
+            format_func=lambda s: f"{s} seconds",
+            disabled=not auto_refresh_enabled,
+        )
+        st.caption(
+            "Recommended: 60s for normal use, 30s for live demos, 15s only for short single-user testing."
+        )
+
+        last_auto_iso = st.session_state.get("last_auto_ingest_iso")
+        if last_auto_iso:
+            st.caption(f"Last auto refresh: {last_auto_iso}")
+        last_auto_source = st.session_state.get("last_auto_ingest_source")
+        if last_auto_source:
+            st.caption(f"Last auto source: {last_auto_source}")
+        last_auto_error = st.session_state.get("last_auto_ingest_error")
+        if last_auto_error:
+            st.warning(f"Last auto refresh failed: {last_auto_error}")
 
         st.divider()
         st.subheader("Mode")
@@ -139,42 +215,45 @@ def main() -> None:
                 f"**Official alerts live here:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})"
             )
 
-        st.divider()
-        marine_enrichment = st.toggle(
-            "Show marine wave context (optional)",
-            value=False,
-            help="Fetches live wave height/period from Open-Meteo for the selected event. Fails silently if unavailable.",
-        )
 
-        with st.expander("Model Evaluation (Phase 6)", expanded=False):
-            metrics = _load_metrics_artifact()
-            if not metrics:
-                st.info(
-                    "No metrics artifact found yet. Run: "
-                    "`python -m src.ml_evaluate --db-path data/events.sqlite`"
+
+    if auto_refresh_enabled:
+
+        @st.fragment(run_every=f"{refresh_interval_sec}s")
+        def _auto_refresh_tick() -> None:
+            # Guardrail: avoid back-to-back ingest calls if reruns happen rapidly.
+            now_ts = time.time()
+            last_ts = float(st.session_state.get("last_auto_ingest_ts", 0.0))
+            if now_ts - last_ts < refresh_interval_sec:
+                return
+
+            try:
+                result = run_ingest(
+                    db_path=db_path,
+                    replay_mode=replay_mode,
+                    sample_path=sample_path,
+                    fallback_on_error=True,
                 )
-            else:
-                st.write(
-                    {
-                        "target_label": metrics.get("target_label"),
-                        "split_mode_used": metrics.get("split_mode_used"),
-                        "rows_total": metrics.get("rows_total"),
-                        "train_rows": metrics.get("train_rows"),
-                        "test_rows": metrics.get("test_rows"),
-                        "pr_auc": metrics.get("pr_auc"),
-                        "positive_rate_test": metrics.get("positive_rate_test"),
-                        "note": metrics.get("note"),
-                    }
+                st.session_state["last_auto_ingest_source"] = result.get("source")
+                st.session_state["last_auto_ingest_error"] = ""
+            except Exception as exc:
+                st.session_state["last_auto_ingest_error"] = str(exc)
+            finally:
+                st.session_state["last_auto_ingest_ts"] = now_ts
+                st.session_state["last_auto_ingest_iso"] = _to_display_time(
+                    int(now_ts * 1000), tz_name=display_tz
                 )
-                p_at_k = metrics.get("precision_at_k") or {}
-                if p_at_k:
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("Precision@5", p_at_k.get("k5"))
-                    c2.metric("Precision@10", p_at_k.get("k10"))
-                    c3.metric("Precision@20", p_at_k.get("k20"))
+
+            st.rerun()
+
+        _auto_refresh_tick()
 
     records = fetch_recent_events(path=db_path, limit=max_rows)
-    scored = [r for r in _score_records(records) if r["score"] >= min_score]
+    scored = [
+        r
+        for r in _score_records(records, display_tz=display_tz)
+        if float(r.get("mag") or 0.0) >= min_magnitude
+    ]
 
     if not scored:
         st.warning("No events found in cache yet.")
@@ -216,7 +295,7 @@ def main() -> None:
             pickable=True,
             auto_highlight=True,
         )
-        tooltip = {
+        tooltip: Any = {
             "html": "<b>{place}</b><br/>Score: <b>{score}</b><br/><small>{id}</small>",
             "style": {"backgroundColor": "#111", "color": "#fff"},
         }
@@ -226,50 +305,90 @@ def main() -> None:
 
     st.divider()
 
-    # --- Ranked queue (left) + event detail (right) ---
-    left, right = st.columns([3, 2])
-    with left:
-        st.subheader("Ranked Queue")
-        st.caption(f"{len(scored)} events · sorted by triage score (highest first)")
-        rows = [
-            {
-                "score": r["score"],
-                "place": r.get("place"),
-                "Mw": r.get("mag"),
-                "depth (km)": r.get("depth"),
-                "tsunami \u26a0": r.get("tsunami"),
-                "time (UTC)": r.get("time_iso"),
-                "id": r["id"],
-            }
-            for r in scored
-        ]
-        st.dataframe(rows, hide_index=True, use_container_width=True)
+    # --- Ranked queue (full width) + event detail ---
+    st.subheader("Ranked Queue")
+    if "time_sort_desc" not in st.session_state:
+        st.session_state["time_sort_desc"] = True
 
-    with right:
-        st.subheader("Event Detail")
-        selected_id = st.selectbox("Select event", options=[r["id"] for r in scored])
-        selected = next(r for r in scored if r["id"] == selected_id)
+    sort_left, sort_right = st.columns([1, 5])
+    with sort_left:
+        if st.button("time", help="Toggle time ordering"):
+            st.session_state["time_sort_desc"] = not st.session_state["time_sort_desc"]
 
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Score", selected["score"])
-        c2.metric("Mw", selected.get("mag"))
-        c3.metric("Depth (km)", selected.get("depth"))
+    sort_desc = bool(st.session_state["time_sort_desc"])
+    queue_events = list(scored)
+    queue_events.sort(
+        key=lambda r: max(r.get("time") or 0, r.get("updated") or 0),
+        reverse=sort_desc,
+    )
 
-        st.markdown(f"**Place:** {selected.get('place') or 'unknown'}")
-        st.markdown(f"**Time:** {selected.get('time_iso') or 'unknown'}")
-        st.markdown(f"**Why this score:** {selected.get('explanation') or '—'}")
+    with sort_right:
+        st.caption(
+            f"{len(queue_events)} events · "
+            f"{'newest to oldest' if sort_desc else 'oldest to newest'}"
+        )
+    st.caption("Tip: click a row in the table to auto-select that event in Event Detail.")
+    st.caption(f"Times shown in {display_tz}")
 
-        if marine_enrichment and selected.get("lat") and selected.get("lon"):
-            with st.spinner("Fetching marine conditions\u2026"):
-                conditions = fetch_marine_conditions(
-                    lat=selected["lat"], lon=selected["lon"]
-                )
-            if conditions is not None:
-                st.info(f"\U0001f30a Marine context: {conditions.summary()}")
-            else:
-                st.caption("Marine data unavailable for this location.")
+    rows = [
+        {
+            "score": r["score"],
+            "place": r.get("place"),
+            "Mw": r.get("mag"),
+            "depth (km)": r.get("depth"),
+            "tsunami": r.get("tsunami"),
+            "time": r.get("time_iso"),
+            "id": r["id"],
+        }
+        for r in queue_events
+    ]
+    queue_selection = st.dataframe(
+        rows,
+        hide_index=True,
+        use_container_width=True,
+        on_select="rerun",
+        selection_mode="single-row",
+        key="ranked_queue_table",
+    )
 
-        st.markdown(f"**Official alerts:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})")
+    selected_rows = queue_selection.get("selection", {}).get("rows", [])
+    if selected_rows:
+        selected_idx = selected_rows[0]
+        if 0 <= selected_idx < len(rows):
+            st.session_state["selected_event_id"] = rows[selected_idx]["id"]
+
+    st.subheader("Event Detail")
+    event_ids = [r["id"] for r in queue_events]
+    current_selected_id = st.session_state.get("selected_event_id", event_ids[0])
+    if current_selected_id not in event_ids:
+        current_selected_id = event_ids[0]
+
+    selected_id = st.selectbox(
+        "Select event",
+        options=event_ids,
+        index=event_ids.index(current_selected_id),
+    )
+    st.session_state["selected_event_id"] = selected_id
+    selected = next(r for r in queue_events if r["id"] == selected_id)
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Score", selected["score"])
+    c2.metric("Mw", selected.get("mag"))
+    c3.metric("Depth (km)", selected.get("depth"))
+
+    st.markdown(f"**Place:** {selected.get('place') or 'unknown'}")
+    st.markdown(f"**Time ({display_tz}):** {selected.get('time_iso') or 'unknown'}")
+    st.markdown(f"**Why this score:** {selected.get('explanation') or '—'}")
+
+    if selected.get("lat") and selected.get("lon"):
+        with st.spinner("Fetching marine conditions\u2026"):
+            conditions = fetch_marine_conditions(lat=selected["lat"], lon=selected["lon"])
+        if conditions is not None:
+            st.info(f"\U0001f30a Marine context: {conditions.summary()}")
+        else:
+            st.caption("Marine data unavailable for this location.")
+
+    st.markdown(f"**Official alerts:** [{TSUNAMI_GOV_URL}]({TSUNAMI_GOV_URL})")
 
 
 if __name__ == "__main__":
